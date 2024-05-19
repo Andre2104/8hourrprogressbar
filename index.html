@@ -48,7 +48,7 @@
 
         #timeRemaining {
             color: #212121; /* Change color for better visibility if needed */
-            position: absolute;
+            /* position: absolute; */
             width: 100%;
             text-align: center;
             font-size: 16px;
@@ -62,9 +62,110 @@
     <div id="progressContainer">
         <div id="progressBar"></div>
         <div id="progressText">0%</div>
-        
     </div>
     <div id="timeRemaining">8:00:00</div>
+
+    <!-- Add input fields and button -->
+    <input type="number" id="hoursInput" placeholder="Hours">
+    <input type="number" id="minutesInput" placeholder="Minutes">
+    <button onclick="start()">Start</button>
+
+
+
+    <div id="searchContainer">
+      <input type="text" id="tagSearchInput" placeholder="Search tags">
+      <button onclick="searchTags()">Search</button>
+      <button onclick="clearSearch()">Clear Search</button>
+  </div>
+  
+  <div id="noteContainer">
+      <input type="text" id="noteTitleInput" placeholder="Note Title">
+      <textarea id="noteContentInput" placeholder="Write your note here..."></textarea>
+      <input type="text" id="noteTagsInput" placeholder="Tags (comma separated)">
+      <button onclick="saveNote()">Save Note</button>
+  </div>
+  
+  <div id="notesDisplay"></div>
+  
+  <script>
+      function saveNote() {
+          const noteTitleInput = document.getElementById('noteTitleInput');
+          const noteContentInput = document.getElementById('noteContentInput');
+          const noteTagsInput = document.getElementById('noteTagsInput');
+          const notesDisplay = document.getElementById('notesDisplay');
+          const title = noteTitleInput.value;
+          const content = noteContentInput.value;
+          const tags = noteTagsInput.value.split(',').map(tag => tag.trim());
+          if (title && content) {
+              // Save note to local storage
+              const notes = JSON.parse(localStorage.getItem('notes')) || [];
+              notes.push({ title, content, tags });
+              localStorage.setItem('notes', JSON.stringify(notes));
+  
+              // Clear inputs
+              noteTitleInput.value = '';
+              noteContentInput.value = '';
+              noteTagsInput.value = '';
+  
+              // Display notes
+              displayNotes();
+          }
+      }
+  
+      function displayNotes() {
+          const notesDisplay = document.getElementById('notesDisplay');
+          const notes = JSON.parse(localStorage.getItem('notes')) || [];
+          notesDisplay.innerHTML = notes.map((note, index) => `
+              <div>
+                  <h3 contenteditable="true" onblur="editNote(${index}, 'title', event)">${note.title}</h3>
+                  <p contenteditable="true" onblur="editNote(${index}, 'content', event)">${note.content}</p>
+                  <p>Tags: ${note.tags.join(', ')}</p>
+                  <button onclick="deleteNote(${index})">Delete</button>
+              </div>
+          `).join('');
+      }
+  
+      function editNote(index, field, event) {
+          const notes = JSON.parse(localStorage.getItem('notes')) || [];
+          notes[index][field] = event.target.innerText;
+          localStorage.setItem('notes', JSON.stringify(notes));
+      }
+  
+      function deleteNote(index) {
+          const notes = JSON.parse(localStorage.getItem('notes')) || [];
+          notes.splice(index, 1);
+          localStorage.setItem('notes', JSON.stringify(notes));
+          displayNotes();
+      }
+  
+      function searchTags() {
+          const tagSearchInput = document.getElementById('tagSearchInput');
+          const searchTag = tagSearchInput.value.trim();
+          const notesDisplay = document.getElementById('notesDisplay');
+          const notes = JSON.parse(localStorage.getItem('notes')) || [];
+          const filteredNotes = notes.filter(note => note.tags.includes(searchTag));
+          notesDisplay.innerHTML = filteredNotes.map((note, index) => `
+              <div>
+                  <h3 contenteditable="true" onblur="editNote(${index}, 'title', event)">${note.title}</h3>
+                  <p contenteditable="true" onblur="editNote(${index}, 'content', event)">${note.content}</p>
+                  <p>Tags: ${note.tags.join(', ')}</p>
+                  <button onclick="deleteNote(${index})">Delete</button>
+              </div>
+          `).join('');
+      }
+  
+      function clearSearch() {
+          const tagSearchInput = document.getElementById('tagSearchInput');
+          tagSearchInput.value = '';
+          displayNotes();
+      }
+  
+      // Display notes on page load
+      displayNotes();
+  </script>
+
+
+
     <script>
         function startProgress(duration) {
             const progressBar = document.getElementById('progressBar');
@@ -99,7 +200,15 @@
             updateProgress();
         }
 
-        startProgress(8 * 60 * 60 * 1000); // 8 hours in milliseconds
+        // New function to start the progress with user input
+        function start() {
+            const hoursInput = document.getElementById('hoursInput');
+            const minutesInput = document.getElementById('minutesInput');
+            const hours = parseInt(hoursInput.value) || 0;
+            const minutes = parseInt(minutesInput.value) || 0;
+            const duration = (hours * 60 * 60 + minutes * 60) * 1000; // Convert to milliseconds
+            startProgress(duration);
+        }
     </script>
 </body>
 </html>
